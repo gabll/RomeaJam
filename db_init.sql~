@@ -1,0 +1,29 @@
+create database traffik;
+use traffik;
+
+create table jams(
+id int unsigned not null auto_increment,
+startLatitude float,
+startLongitude float,
+endLatitude float,
+endLongitude float,
+street varchar(50),
+severity tinyint,
+color varchar(50),
+delayInSec int,
+source varchar(5),
+timestamp datetime,
+direction varchar(5),
+primary key (id));
+
+create table alerts(
+id int unsigned not null auto_increment,
+latitude float(9,6),
+longitude float(9,6),
+likes smallint,
+severity tinyint,
+category varchar(50),
+subcategory varchar(50),
+source varchar(5),
+timestamp datetime,
+primary key (id));
