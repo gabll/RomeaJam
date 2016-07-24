@@ -1,8 +1,8 @@
-# from https://gist.github.com/mplewis/8483f1c24f2d6259aef6
 import logging
 from traceback import format_exc
 import datetime
 
+# code from https://gist.github.com/mplewis/8483f1c24f2d6259aef6
 from schedule import Scheduler
 
 
