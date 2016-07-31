@@ -109,14 +109,14 @@ class SegmentStatus():
                 end = float(jam.endLongitude)
                 #override start and end if they are outside of the segment borders
                 if self.direction == 'East':
-                    if jam.startLongitude <= self.startLongitude:
+                    if float(jam.startLongitude) <= self.startLongitude:
                         start = self.startLongitude
-                    if jam.endLongitude >= self.endLongitude:
+                    if float(jam.endLongitude) >= self.endLongitude:
                         end = self.endLongitude
                 if self.direction == 'West':
-                    if jam.startLongitude >= self.startLongitude:
+                    if float(jam.startLongitude) >= self.startLongitude:
                         start = self.startLongitude
-                    if jam.endLongitude <= self.endLongitude:
+                    if float(jam.endLongitude) <= self.endLongitude:
                         end = self.endLongitude
                 #add the jam to the segment
                 self.traffic_length_list.append(round(abs(end-start),4))
@@ -161,14 +161,14 @@ if __name__ == "__main__":
     my_alert = Alert(1.123111, 2.345612, 234, 'jam', 'small_jam', 'w',
                     datetime.now())
     print my_alert.__dict__, '\n'
-    my_segment = SegmentStatus('segment_test', 12.21113, 12.17577, 'test_street',
+    my_segment = SegmentStatus('segment_test', 12.270270, 12.211130, 'test_street',
                                 datetime.now())
     print my_segment.__dict__, '\n'
-    my_segment.add_jam(Jam(0, 12.190139, 0, 12.178143, 'test_street',
+    my_segment.add_jam(Jam(0, 12.266695, 0, 12.189606, 'test_street',
                             3, 'hard', 247,'w',datetime.now()))
     my_segment.update_packing_index()
     print my_segment.__dict__, '\n'
-    my_segment.add_jam(Jam(0, 12.210453, 0, 12.178143, 'test_street',
-                            2, 'hard', 247,'w',datetime.now()))
-    my_segment.update_packing_index()
-    print my_segment.__dict__, '\n'
+    # my_segment.add_jam(Jam(0, 12.210453, 0, 12.178143, 'test_street',
+    #                         2, 'hard', 247,'w',datetime.now()))
+    # my_segment.update_packing_index()
+    # print my_segment.__dict__, '\n'
