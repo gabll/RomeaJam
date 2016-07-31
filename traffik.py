@@ -17,9 +17,9 @@ class Jam():
         self.source = source
         self.timestamp = timestamp
         if startLongitude < endLongitude:
-            self.direction = 'West'
-        else:
             self.direction = 'East'
+        else:
+            self.direction = 'West'
 
     def db_insert(self):
         """insert the jam into the jams table"""
@@ -43,7 +43,6 @@ class Jam():
                                credentials.mysql_db)
         conn.execute_query(query)
         conn.close()
-
 
 class Alert():
 
@@ -75,11 +74,101 @@ class Alert():
         conn.execute_query(query)
         conn.close()
 
+class SegmentStatus():
+
+    def __init__(self, name, startLongitude, endLongitude, street, timestamp):
+        self.name = name
+        self.startLongitude = startLongitude
+        self.endLongitude = endLongitude
+        self.street = street
+        self.timestamp = timestamp
+        self.length = abs(endLongitude - startLongitude)
+        if startLongitude < endLongitude:
+            self.direction = 'East'
+        else:
+            self.direction = 'West'
+        self.traffic_length_list = []
+        self.severity_list = []
+        self.color_list = []
+        self.delayInSec_list = []
+        self.packing_index = 0
+
+    def add_jam(self, jam):
+        """adds a jam in the current road segment
+        Compute traffic as a projection of the longitude"""
+        #check if same street and direction
+        if jam.street == self.street and jam.direction == self.direction:
+            if (self.direction == 'West' and
+            (float(jam.startLongitude) < self.startLongitude and float(jam.startLongitude) > self.endLongitude) or
+            (float(jam.endLongitude) < self.startLongitude and float(jam.endLongitude) > self.endLongitude)
+            ) or (self.direction == 'East' and
+            (float(jam.startLongitude) > self.startLongitude and float(jam.startLongitude) < self.endLongitude) or
+            (float(jam.endLongitude) > self.startLongitude and float(jam.endLongitude) < self.endLongitude)):
+                #traffic length
+                start = float(jam.startLongitude)
+                end = float(jam.endLongitude)
+                #override start and end if they are outside of the segment borders
+                if self.direction == 'East':
+                    if jam.startLongitude <= self.startLongitude:
+                        start = self.startLongitude
+                    if jam.endLongitude >= self.endLongitude:
+                        end = self.endLongitude
+                if self.direction == 'West':
+                    if jam.startLongitude >= self.startLongitude:
+                        start = self.startLongitude
+                    if jam.endLongitude <= self.endLongitude:
+                        end = self.endLongitude
+                #add the jam to the segment
+                self.traffic_length_list.append(round(abs(end-start),4))
+                self.severity_list.append(jam.severity)
+                self.color_list.append(jam.color)
+                self.delayInSec_list.append(jam.delayInSec)
+
+    def update_packing_index(self, max_severity=4):
+        """update the packing index given the jams inside the road segment"""
+        weighted_traffic = sum([self.traffic_length_list[i] * self.severity_list[i]
+                           for i in range(len(self.traffic_length_list))])
+        self.packing_index += weighted_traffic / (self.length * max_severity)
+        self.packing_index = round(self.packing_index, 4)
+
+    def db_insert(self):
+        """insert the road segment into segments table"""
+        query = """INSERT INTO segments (name, startLongitude, endLongitude,
+                   street, length, direction, traffic_length_list, severity_list,
+                   delayInSec_list, packing_index, timestamp) VALUES ("""
+        query += "'" + sql_formatter(self.name) + "'," \
+                 "'" + sql_formatter(self.startLongitude) + "'," \
+                 "'" + sql_formatter(self.endLongitude) + "'," \
+                 "'" + sql_formatter(self.street) + "'," \
+                 "'" + sql_formatter(self.length) + "'," \
+                 "'" + sql_formatter(self.direction) + "'," \
+                 "'" + sql_formatter(self.traffic_length_list) + "'," \
+                 "'" + sql_formatter(self.severity_list) + "'," \
+                 "'" + sql_formatter(self.delayInSec_list) + "'," \
+                 "'" + sql_formatter(self.packing_index) + "'," \
+                 "'" + sql_formatter(self.timestamp) + "');"
+        conn = dbconnection(credentials.mysql_host,
+                               credentials.mysql_user,
+                               credentials.mysql_pwd,
+                               credentials.mysql_db)
+        conn.execute_query(query)
+        conn.close()
+
 if __name__ == "__main__":
-    my_jam = Jam(1.123111, 2.345612, 3.45678999, 4.567893923, 'test_street',
+    my_jam = Jam(1.123111, 3.45000, 3.456789, 2.345612, 'test_street',
                  9, 'hard', 247,'w',datetime.now())
-    print my_jam
+    print my_jam.__dict__, '\n'
     my_alert = Alert(1.123111, 2.345612, 234, 'jam', 'small_jam', 'w',
                     datetime.now())
-    print my_alert
-    my_alert.db_insert()
+    print my_alert.__dict__, '\n'
+    my_segment = SegmentStatus('segment_test', 12.21113, 12.17577, 'test_street',
+                                datetime.now())
+    print my_segment.__dict__, '\n'
+    my_segment.add_jam(Jam(0, 12.190139, 0, 12.178143, 'test_street',
+                            3, 'hard', 247,'w',datetime.now()))
+    my_segment.update_packing_index()
+    print my_segment.__dict__, '\n'
+    my_segment.add_jam(Jam(0, 12.210453, 0, 12.178143, 'test_street',
+                            2, 'hard', 247,'w',datetime.now()))
+    my_segment.update_packing_index()
+    print my_segment.__dict__, '\n'

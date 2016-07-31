@@ -1,6 +1,8 @@
-# Credentials files #
-#####################
+# Credentials files etc #
+#########################
 credentials.py
+coordinates.py
+nohup.out
 
 # IPython notebook checkpoints #
 ################################
