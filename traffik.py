@@ -1,6 +1,7 @@
 from dbconnection import dbconnection, sql_formatter
 import credentials
-from datetime import datetime
+#from datetime import datetime
+from time import time
 
 class Jam():
 
@@ -91,6 +92,8 @@ class SegmentStatus():
         self.severity_list = []
         self.color_list = []
         self.delayInSec_list = []
+        self.accident_alerts = 0
+        self.traffic_alerts = 0
         self.packing_index = 0
 
     def add_jam(self, jam):
@@ -135,7 +138,8 @@ class SegmentStatus():
         """insert the road segment into segments table"""
         query = """INSERT INTO segments (name, startLongitude, endLongitude,
                    street, length, direction, traffic_length_list, severity_list,
-                   delayInSec_list, packing_index, timestamp) VALUES ("""
+                   delayInSec_list, packing_index, accident_alerts,
+                   traffic_alerts, timestamp) VALUES ("""
         query += "'" + sql_formatter(self.name) + "'," \
                  "'" + sql_formatter(self.startLongitude) + "'," \
                  "'" + sql_formatter(self.endLongitude) + "'," \
@@ -146,6 +150,8 @@ class SegmentStatus():
                  "'" + sql_formatter(self.severity_list) + "'," \
                  "'" + sql_formatter(self.delayInSec_list) + "'," \
                  "'" + sql_formatter(self.packing_index) + "'," \
+                 "'" + sql_formatter(self.accident_alerts) + "'," \
+                 "'" + sql_formatter(self.traffic_alerts) + "'," \
                  "'" + sql_formatter(self.timestamp) + "');"
         conn = dbconnection(credentials.mysql_host,
                                credentials.mysql_user,
@@ -156,19 +162,19 @@ class SegmentStatus():
 
 if __name__ == "__main__":
     my_jam = Jam(1.123111, 3.45000, 3.456789, 2.345612, 'test_street',
-                 9, 'hard', 247,'w',datetime.now())
+                 9, 'hard', 247,'w',time())
     print my_jam.__dict__, '\n'
     my_alert = Alert(1.123111, 2.345612, 234, 'jam', 'small_jam', 'w',
-                    datetime.now())
+                    time())
     print my_alert.__dict__, '\n'
     my_segment = SegmentStatus('segment_test', 12.270270, 12.211130, 'test_street',
-                                datetime.now())
+                                time())
     print my_segment.__dict__, '\n'
     my_segment.add_jam(Jam(0, 12.266695, 0, 12.189606, 'test_street',
-                            3, 'hard', 247,'w',datetime.now()))
+                            3, 'hard', 247,'w',time()))
     my_segment.update_packing_index()
     print my_segment.__dict__, '\n'
     # my_segment.add_jam(Jam(0, 12.210453, 0, 12.178143, 'test_street',
-    #                         2, 'hard', 247,'w',datetime.now()))
+    #                         2, 'hard', 247,'w',time()))
     # my_segment.update_packing_index()
     # print my_segment.__dict__, '\n'

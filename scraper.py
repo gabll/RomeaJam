@@ -1,7 +1,6 @@
 import coordinates
 from traffik import Jam, Alert, SegmentStatus
 import requests
-from datetime import datetime
 from safe_schedule import SafeScheduler
 import time
 
@@ -13,7 +12,7 @@ def get_traffic():
 def job():
     """ Get jams and alerts from API, store them in database and compute
     packing index for each road segment"""
-    now = datetime.now()
+    now = int(time.time())
     jam_list = []
     # request traffic from API
     traffic = get_traffic()
