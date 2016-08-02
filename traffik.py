@@ -77,12 +77,14 @@ class Alert():
 
 class SegmentStatus():
 
-    def __init__(self, name, startLongitude, endLongitude, street, timestamp):
+    def __init__(self, name, startLongitude, endLongitude, street, timestamp, startLatitude, endLatitude):
         self.name = name
         self.startLongitude = startLongitude
         self.endLongitude = endLongitude
         self.street = street
         self.timestamp = timestamp
+        self.startLatitude = startLatitude
+        self.endLatitude = endLatitude
         self.length = abs(endLongitude - startLongitude)
         if startLongitude < endLongitude:
             self.direction = 'East'
@@ -134,6 +136,21 @@ class SegmentStatus():
         self.packing_index += weighted_traffic / (self.length * max_severity)
         self.packing_index = round(self.packing_index, 4)
 
+    def add_alert(self, alert):
+        """adds an alert in the road segment if the alert is within the lat-long rectangle
+        because there is no direction hint, it has to be invocked only after update_packing_index
+        """
+        if self.packing_index <> 0:
+            if (alert.longitude > min(self.startLongitude, self.endLongitude) and
+                    alert.longitude < max(self.startLongitude, self.endLongitude)):
+                if (alert.latitude > min(self.startLatitude, self.endLatitude) and
+                        alert.latitude < max(self.startLatitude, self.endLatitude)):
+                    if alert.category == 'JAM':
+                        # todo: weight by subcategory, thumbs_up
+                        self.traffic_alerts += 1
+                    if alert.category == 'ACCIDENT':
+                        self.accident_alerts += 1
+
     def db_insert(self):
         """insert the road segment into segments table"""
         query = """INSERT INTO segments (name, startLongitude, endLongitude,
@@ -164,15 +181,16 @@ if __name__ == "__main__":
     my_jam = Jam(1.123111, 3.45000, 3.456789, 2.345612, 'test_street',
                  9, 'hard', 247,'w',time())
     print my_jam.__dict__, '\n'
-    my_alert = Alert(1.123111, 2.345612, 234, 'jam', 'small_jam', 'w',
+    my_alert = Alert(7.5, 12.22, 234, 'JAM', 'small_jam', 'w',
                     time())
     print my_alert.__dict__, '\n'
     my_segment = SegmentStatus('segment_test', 12.270270, 12.211130, 'test_street',
-                                time())
+                                time(),7,8)
     print my_segment.__dict__, '\n'
     my_segment.add_jam(Jam(0, 12.266695, 0, 12.189606, 'test_street',
                             3, 'hard', 247,'w',time()))
     my_segment.update_packing_index()
+    my_segment.add_alert(my_alert)
     print my_segment.__dict__, '\n'
     # my_segment.add_jam(Jam(0, 12.210453, 0, 12.178143, 'test_street',
     #                         2, 'hard', 247,'w',time()))

@@ -38,7 +38,8 @@ def job():
                 print 'INSERT ERROR: ', i
     # bin jams into road segments, store in database
     for i in coordinates.road_segment_list:
-        segm = SegmentStatus(i['name'], i['start'], i['end'], i['street'], now)
+        segm = SegmentStatus(i['name'], i['start'], i['end'], i['street'], now,
+                             i['startlat'], i['endlat'])
         for jam in jam_list:
             segm.add_jam(jam)
         segm.update_packing_index()
@@ -47,7 +48,7 @@ def job():
         except:
             print 'INSERT ERROR: ', i
 
-#job()
+# job()
 
 # Run the job
 scheduler = SafeScheduler()
