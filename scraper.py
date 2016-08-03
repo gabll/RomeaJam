@@ -14,6 +14,7 @@ def job():
     packing index for each road segment"""
     now = int(time.time())
     jam_list = []
+    alert_list = []
     # request traffic from API
     traffic = get_traffic()
     # store jams in the database; severity starts from 0
@@ -32,17 +33,20 @@ def job():
         for i in traffic['alerts']:
             alert = Alert(i['latitude'], i['longitude'], i['numOfThumbsUp'],
                            i['type'], i['subType'], 'w', now)
+            alert_list.append(alert)
             try:
                 alert.db_insert()
             except:
                 print 'INSERT ERROR: ', i
-    # bin jams into road segments, store in database
+    # bin jams into road segments, add alerts and store in database
     for i in coordinates.road_segment_list:
         segm = SegmentStatus(i['name'], i['start'], i['end'], i['street'], now,
                              i['startlat'], i['endlat'])
         for jam in jam_list:
             segm.add_jam(jam)
         segm.update_packing_index()
+        for alert in alert_list:
+            segm.add_alert(alert)
         try:
             segm.db_insert()
         except:
