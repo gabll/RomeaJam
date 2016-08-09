@@ -42,11 +42,11 @@ def job():
     for i in coordinates.road_segment_list:
         segm = SegmentStatus(i['name'], i['start'], i['end'], i['street'], now,
                              i['startlat'], i['endlat'])
-        for jam in jam_list:
-            segm.add_jam(jam)
+        for j in jam_list:
+            segm.add_jam(j)
         segm.update_packing_index()
-        for alert in alert_list:
-            segm.add_alert(alert)
+        for a in alert_list:
+            segm.add_alert(a)
         try:
             segm.db_insert()
         except:

@@ -1,6 +1,6 @@
 from dbconnection import dbconnection, sql_formatter
 import credentials
-#from datetime import datetime
+# from datetime import datetime
 from time import time
 
 class Jam():
@@ -45,6 +45,10 @@ class Jam():
         conn.execute_query(query)
         conn.close()
 
+def get_jam(timestamp):
+    """returns a jam from the database given the timestamp"""
+    pass
+
 class Alert():
 
     def __init__(self, latitude, longitude, likes, category, subcategory,
@@ -75,9 +79,28 @@ class Alert():
         conn.execute_query(query)
         conn.close()
 
+def get_alerts(timestamp):
+    """returns a list of alerts from the database given the timestamp"""
+    result = []
+    qry = ("SELECT * FROM alerts WHERE timestamp = " + str(timestamp) + ";")
+    conn = dbconnection(credentials.mysql_host,
+                           credentials.mysql_user,
+                           credentials.mysql_pwd,
+                           credentials.mysql_db)
+    cursor = conn.execute_query(qry)
+    for i in cursor.fetchall():
+        result.append(Alert(i['latitude'], i['longitude'], i['likes'],
+                            i['category'], i['subcategory'], i['source'],
+                            i['timestamp']))
+    conn.close()
+    return result
+
 class SegmentStatus():
 
-    def __init__(self, name, startLongitude, endLongitude, street, timestamp, startLatitude, endLatitude):
+    def __init__(self, name, startLongitude, endLongitude, street, timestamp,
+                startLatitude, endLatitude, traffic_length_list=None,
+                severity_list=None, delayInSec_list=None,
+                accident_alerts=0, traffic_alerts=0, packing_index=0):
         self.name = name
         self.startLongitude = startLongitude
         self.endLongitude = endLongitude
@@ -90,13 +113,15 @@ class SegmentStatus():
             self.direction = 'East'
         else:
             self.direction = 'West'
-        self.traffic_length_list = []
-        self.severity_list = []
-        self.color_list = []
-        self.delayInSec_list = []
-        self.accident_alerts = 0
-        self.traffic_alerts = 0
-        self.packing_index = 0
+        if traffic_length_list is None:
+            self.traffic_length_list = []
+        if severity_list is None:
+            self.severity_list = []
+        if delayInSec_list is None:
+            self.delayInSec_list = []
+        self.accident_alerts = accident_alerts
+        self.traffic_alerts = traffic_alerts
+        self.packing_index = packing_index
 
     def add_jam(self, jam):
         """adds a jam in the current road segment
@@ -126,7 +151,6 @@ class SegmentStatus():
                 #add the jam to the segment
                 self.traffic_length_list.append(round(abs(end-start),4))
                 self.severity_list.append(jam.severity)
-                self.color_list.append(jam.color)
                 self.delayInSec_list.append(jam.delayInSec)
 
     def update_packing_index(self, max_severity=4):
@@ -141,10 +165,10 @@ class SegmentStatus():
         because there is no direction hint, it has to be invocked only after update_packing_index
         """
         if self.packing_index <> 0:
-            if (alert.longitude > min(self.startLongitude, self.endLongitude) and
-                    alert.longitude < max(self.startLongitude, self.endLongitude)):
-                if (alert.latitude > min(self.startLatitude, self.endLatitude) and
-                        alert.latitude < max(self.startLatitude, self.endLatitude)):
+            if (float(alert.longitude) > min(self.startLongitude, self.endLongitude) and
+                    float(alert.longitude) < max(self.startLongitude, self.endLongitude)):
+                if (float(alert.latitude) > min(self.startLatitude, self.endLatitude) and
+                        float(alert.latitude) < max(self.startLatitude, self.endLatitude)):
                     if alert.category == 'JAM':
                         # todo: weight by subcategory, thumbs_up
                         self.traffic_alerts += 1
@@ -152,11 +176,12 @@ class SegmentStatus():
                         self.accident_alerts += 1
 
     def db_insert(self):
-        """insert the road segment into segments table"""
+        """insert the road segment into segments table
+        TODO: add latitude"""
         query = """INSERT INTO segments (name, startLongitude, endLongitude,
                    street, length, direction, traffic_length_list, severity_list,
                    delayInSec_list, packing_index, accident_alerts,
-                   traffic_alerts, timestamp) VALUES ("""
+                   traffic_alerts, startLatitude, endLatitude, timestamp) VALUES ("""
         query += "'" + sql_formatter(self.name) + "'," \
                  "'" + sql_formatter(self.startLongitude) + "'," \
                  "'" + sql_formatter(self.endLongitude) + "'," \
@@ -169,6 +194,8 @@ class SegmentStatus():
                  "'" + sql_formatter(self.packing_index) + "'," \
                  "'" + sql_formatter(self.accident_alerts) + "'," \
                  "'" + sql_formatter(self.traffic_alerts) + "'," \
+                 "'" + sql_formatter(self.startLatitude) + "'," \
+                 "'" + sql_formatter(self.endLatitude) + "'," \
                  "'" + sql_formatter(self.timestamp) + "');"
         conn = dbconnection(credentials.mysql_host,
                                credentials.mysql_user,
@@ -176,6 +203,56 @@ class SegmentStatus():
                                credentials.mysql_db)
         conn.execute_query(query)
         conn.close()
+
+def get_segments(timestamp):
+    """returns a list of segments from the database given the timestamp"""
+    result = []
+    qry = ("SELECT * FROM segments WHERE timestamp = " + str(timestamp) + ";")
+    conn = dbconnection(credentials.mysql_host,
+                           credentials.mysql_user,
+                           credentials.mysql_pwd,
+                           credentials.mysql_db)
+    cursor = conn.execute_query(qry)
+    for i in cursor.fetchall():
+        result.append(SegmentStatus(i['latitude'], i['longitude'], i['likes'],
+                            i['category'], i['subcategory'], i['source'],
+                            i['timestamp']))
+    conn.close()
+    return result
+
+class RoadStatus():
+
+    def __init__(self, direction, timestamp):
+        self.timestamp = timestamp
+        self.direction = direction
+        self.segment_list = []
+        qry = ("SELECT * FROM segments"
+               + " WHERE timestamp = " + str(self.timestamp)
+               + " AND direction = '" + str(self.direction) + "';")
+        #print qry
+        conn = dbconnection(credentials.mysql_host,
+                               credentials.mysql_user,
+                               credentials.mysql_pwd,
+                               credentials.mysql_db)
+        cursor = conn.execute_query(qry)
+        for i in cursor.fetchall():
+            #print i
+            self.segment_list.append(SegmentStatus(i['name'], i['startLongitude'],
+                i['endLongitude'], i['street'], i['timestamp'],
+                # i['startLatitude'], i['endLatitude'],
+                0, 0, i['traffic_length_list'],
+                i['severity_list'], i['delayInSec_list'],
+                i['accident_alerts'], i['traffic_alerts'], i['packing_index']))
+        conn.close()
+        if len(self.segment_list):
+            self.packing_index = sum([i.packing_index for i in self.segment_list])/len(self.segment_list)
+        else:
+            self.packing_index = 0
+        self.accident_alerts = sum([i.accident_alerts for i in self.segment_list])
+        self.traffic_alerts = sum([i.traffic_alerts for i in self.segment_list])
+
+    def json(self, arg):
+        pass
 
 if __name__ == "__main__":
     my_jam = Jam(1.123111, 3.45000, 3.456789, 2.345612, 'test_street',
@@ -186,13 +263,14 @@ if __name__ == "__main__":
     print my_alert.__dict__, '\n'
     my_segment = SegmentStatus('segment_test', 12.270270, 12.211130, 'test_street',
                                 time(),7,8)
-    print my_segment.__dict__, '\n'
+    print 'segment', my_segment.__dict__, '\n'
     my_segment.add_jam(Jam(0, 12.266695, 0, 12.189606, 'test_street',
                             3, 'hard', 247,'w',time()))
     my_segment.update_packing_index()
     my_segment.add_alert(my_alert)
-    print my_segment.__dict__, '\n'
-    # my_segment.add_jam(Jam(0, 12.210453, 0, 12.178143, 'test_street',
-    #                         2, 'hard', 247,'w',time()))
-    # my_segment.update_packing_index()
-    # print my_segment.__dict__, '\n'
+    print 'segment', my_segment.__dict__, '\n'
+
+    my_road = RoadStatus('East', 1470683787)
+    print my_road.__dict__, '\n'
+
+    print [al.__dict__ for al in get_alerts(1470740573)]
