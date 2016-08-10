@@ -214,9 +214,12 @@ def get_segments(timestamp):
                            credentials.mysql_db)
     cursor = conn.execute_query(qry)
     for i in cursor.fetchall():
-        result.append(SegmentStatus(i['latitude'], i['longitude'], i['likes'],
-                            i['category'], i['subcategory'], i['source'],
-                            i['timestamp']))
+        result.append({'id': i['id'], 'segment': SegmentStatus(i['name'], i['startLongitude'], i['endLongitude'],
+                   i['street'], i['timestamp'], i['startLatitude'],
+                   i['endLatitude'], i['traffic_length_list'],
+                   i['severity_list'], i['delayInSec_list'],
+                   i['accident_alerts'], i['traffic_alerts'],
+                   i['packing_index'])})
     conn.close()
     return result
 
@@ -229,18 +232,15 @@ class RoadStatus():
         qry = ("SELECT * FROM segments"
                + " WHERE timestamp = " + str(self.timestamp)
                + " AND direction = '" + str(self.direction) + "';")
-        #print qry
         conn = dbconnection(credentials.mysql_host,
                                credentials.mysql_user,
                                credentials.mysql_pwd,
                                credentials.mysql_db)
         cursor = conn.execute_query(qry)
         for i in cursor.fetchall():
-            #print i
             self.segment_list.append(SegmentStatus(i['name'], i['startLongitude'],
                 i['endLongitude'], i['street'], i['timestamp'],
-                # i['startLatitude'], i['endLatitude'],
-                0, 0, i['traffic_length_list'],
+                i['startLatitude'], i['endLatitude'], i['traffic_length_list'],
                 i['severity_list'], i['delayInSec_list'],
                 i['accident_alerts'], i['traffic_alerts'], i['packing_index']))
         conn.close()
@@ -250,10 +250,7 @@ class RoadStatus():
             self.packing_index = 0
         self.accident_alerts = sum([i.accident_alerts for i in self.segment_list])
         self.traffic_alerts = sum([i.traffic_alerts for i in self.segment_list])
-
-    def json(self, arg):
-        pass
-
+        
 if __name__ == "__main__":
     my_jam = Jam(1.123111, 3.45000, 3.456789, 2.345612, 'test_street',
                  9, 'hard', 247,'w',time())
@@ -270,7 +267,8 @@ if __name__ == "__main__":
     my_segment.add_alert(my_alert)
     print 'segment', my_segment.__dict__, '\n'
 
+    print [al.__dict__ for al in get_alerts(1470740573)], '\n'
+    print [se['segment'].__dict__ for se in get_segments(1470083873)], '\n'
+
     my_road = RoadStatus('East', 1470683787)
     print my_road.__dict__, '\n'
-
-    print [al.__dict__ for al in get_alerts(1470740573)]
