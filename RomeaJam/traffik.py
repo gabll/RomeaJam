@@ -80,7 +80,7 @@ class Segment(db.Model):
     direction = db.Column(db.String(5))
     category = db.Column(db.String(25))
     length = db.Column(db.Float)
-    statuses = db.relationship('SegmentStatus', back_populates = 'segment')
+    statuses = db.relationship("SegmentStatus", backref="segment")
 
     def __init__(self, label, startLongitude, endLongitude,
                 startLatitude, endLatitude, street, category):
@@ -100,14 +100,13 @@ class Segment(db.Model):
 class SegmentStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
+    road_status_id = db.Column(db.Integer, db.ForeignKey('road_status.id'))
     timestamp = db.Column(db.Integer)
     jams_list = db.Column(db.String(200))
     delayInSec = db.Column(db.Integer)
     accident_alerts = db.Column(db.Integer)
     traffic_alerts = db.Column(db.Integer)
     packing_index = db.Column(db.Float)
-    segment = db.relationship("Segment", back_populates="statuses")
-
 
     def __init__(self, timestamp, segment, jams_list='', delayInSec=0,
                 accident_alerts=0, traffic_alerts=0, packing_index=0):
@@ -175,6 +174,29 @@ class SegmentStatus(db.Model):
                     if alert.category == 'ACCIDENT':
                         self.accident_alerts += 1
 
+class RoadStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    timestamp = db.Column(db.Integer)
+    category = db.Column(db.String(50))
+    packing_index = db.Column(db.Float)
+    accident_alerts = db.Column(db.Integer)
+    traffic_alerts = db.Column(db.Integer)
+    statuses = db.relationship("SegmentStatus", backref="road_status")
+
+    def __init__(self, timestamp, category):
+        self.timestamp = timestamp
+        self.category = category
+        for status in db.session.query(SegmentStatus).\
+                        filter(SegmentStatus.timestamp==self.timestamp).\
+                        filter(Segment.category==self.category):
+            self.statuses.append(status)
+        if len(self.statuses):
+            self.packing_index = sum([i.packing_index for i in self.statuses])/len(self.statuses)
+        else:
+            self.packing_index = 0
+        self.accident_alerts = sum([i.accident_alerts for i in self.statuses])
+        self.traffic_alerts = sum([i.traffic_alerts for i in self.statuses])
+
 if __name__ == "__main__":
     from time import time
     my_jam = Jam(12.266695, 12.189606, 0,0, 'test_street',
@@ -196,5 +218,10 @@ if __name__ == "__main__":
     my_status.update_packing_index()
     my_status.add_alert(my_alert)
     db.session.add(my_status)
+    print 'segment_status', my_status, '\n'
+
+    my_road = RoadStatus(int(time()), 'arrive')
+    db.session.add(my_status)
+    print 'road_status', my_road, '\n'
+
     db.session.commit()
-    print 'status', my_status, '\n'
