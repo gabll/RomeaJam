@@ -4,6 +4,10 @@ credentials.py
 coordinates.py
 nohup.out
 
+# Python Virtual Environment #
+#############################
+venv/
+
 # IPython notebook checkpoints #
 ################################
 /.ipynb_checkpoints/*.*
@@ -44,7 +48,7 @@ nohup.out
 .Trashes
 ehthumbs.db
 Thumbs.db
-
+*~
 
 
 
