@@ -71,7 +71,7 @@ class Alert(db.Model):
 
 class Segment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    label = db.Column(db.String(50))
+    label = db.Column(db.String(200))
     startLongitude = db.Column(db.Float)
     endLongitude = db.Column(db.Float)
     startLatitude = db.Column(db.Float)
@@ -120,8 +120,13 @@ class SegmentStatus(db.Model):
         #internal variables
         self.traffic_length_list = []
         self.severity_list = []
+        for jam in db.session.query(Jam).filter(Jam.timestamp==self.timestamp):
+            self._add_jam(jam)
+        self._update_packing_index()
+        for alert in db.session.query(Alert).filter(Alert.timestamp==self.timestamp):
+            self._add_alert(alert)
 
-    def add_jam(self, jam):
+    def _add_jam(self, jam):
         """adds a jam in the current road segment
         Compute traffic as a projection of the longitude"""
         #check if same street and direction
@@ -152,7 +157,7 @@ class SegmentStatus(db.Model):
                 self.jams_list += '{sev:' + str(jam.severity) + ', len:' + str(round(abs(end-start),4)) + '}, '
                 self.delayInSec += int(jam.delayInSec * abs(end-start)/abs(jam.endLongitude-jam.startLongitude))
 
-    def update_packing_index(self, max_severity=4):
+    def _update_packing_index(self, max_severity=4):
         """update the packing index given the jams inside the road segment"""
         self.packing_index = 0
         weighted_traffic = sum([self.traffic_length_list[i] * self.severity_list[i]
@@ -160,7 +165,7 @@ class SegmentStatus(db.Model):
         self.packing_index += weighted_traffic / (self.segment.length * max_severity)
         self.packing_index = round(self.packing_index, 4)
 
-    def add_alert(self, alert):
+    def _add_alert(self, alert):
         """adds an alert in the road segment if the alert is within the lat-long rectangle
         because there is no direction hint, it has to be invocked only after update_packing_index
         """
@@ -197,6 +202,33 @@ class RoadStatus(db.Model):
         self.accident_alerts = sum([i.accident_alerts for i in self.statuses])
         self.traffic_alerts = sum([i.traffic_alerts for i in self.statuses])
 
+class RoadAverage(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    from_timestamp = db.Column(db.Integer)
+    to_timestamp = db.Column(db.Integer)
+    category = db.Column(db.String(50))
+    packing_index = db.Column(db.Float)
+    accident_alerts = db.Column(db.Integer)
+    traffic_alerts = db.Column(db.Integer)
+
+    def __init__(self, from_timestamp, to_timestamp, category):
+        self.from_timestamp = from_timestamp
+        self.to_timestamp = to_timestamp
+        self.category = category
+        road_list = []
+        for status in db.session.query(RoadStatus).\
+                        filter(RoadStatus.timestamp>self.from_timestamp).\
+                        filter(RoadStatus.timestamp<=self.to_timestamp).\
+                        filter(RoadStatus.category==self.category):
+            road_list.append(status)
+        if len(road_list):
+            self.packing_index = sum([i.packing_index for i in road_list])/len(road_list)
+        else:
+            self.packing_index = 0
+        self.accident_alerts = sum([i.accident_alerts for i in road_list])/len(road_list)
+        self.traffic_alerts = sum([i.traffic_alerts for i in road_list])/len(road_list)
+
+
 if __name__ == "__main__":
     from time import time
     my_jam = Jam(12.266695, 12.189606, 0,0, 'test_street',
@@ -206,6 +238,7 @@ if __name__ == "__main__":
 
     my_alert = Alert(7.5, 12.22, 234, 'JAM', 'small_jam', 'w',
                     int(time()))
+    db.session.add(my_alert)
     print 'alert', my_alert, '\n'
 
     my_segment = Segment('segment_test', 12.270270, 12.211130, 7,8,
@@ -214,9 +247,6 @@ if __name__ == "__main__":
     print 'segment', my_segment, '\n'
 
     my_status = SegmentStatus(int(time()), my_segment)
-    my_status.add_jam(my_jam)
-    my_status.update_packing_index()
-    my_status.add_alert(my_alert)
     db.session.add(my_status)
     print 'segment_status', my_status, '\n'
 
