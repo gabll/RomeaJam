@@ -7,8 +7,7 @@ from sqlalchemy.orm import class_mapper
 
 def _repr(self):
     """string representation of objects"""
-    attrs = class_mapper(self.__class__).column_attrs  # only columns
-    # attrs = class_mapper(self.__class__).attrs  # show also relationships
+    attrs = class_mapper(self.__class__).column_attrs
     return u"<{}({})>".format(
         self.__class__.__name__,
         ', '.join(
@@ -183,18 +182,23 @@ class RoadStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     timestamp = db.Column(db.Integer)
     category = db.Column(db.String(50))
+    snake_effect = db.Column(db.SmallInteger)
     packing_index = db.Column(db.Float)
     accident_alerts = db.Column(db.Integer)
     traffic_alerts = db.Column(db.Integer)
     statuses = db.relationship("SegmentStatus", backref="road_status")
 
-    def __init__(self, timestamp, category):
+    def __init__(self, timestamp, category, snake_effect):
         self.timestamp = timestamp
         self.category = category
-        for status in db.session.query(SegmentStatus).\
+        self.snake_effect = snake_effect
+        for status in db.session.query(SegmentStatus).join(Segment).\
                         filter(SegmentStatus.timestamp==self.timestamp).\
-                        filter(Segment.category==self.category):
+                        filter(Segment.category==self.category).\
+                        order_by(SegmentStatus.packing_index.desc()).\
+                        limit(self.snake_effect):
             self.statuses.append(status)
+        print self.statuses
         if len(self.statuses):
             self.packing_index = sum([i.packing_index for i in self.statuses])/len(self.statuses)
         else:
@@ -215,12 +219,10 @@ class RoadAverage(db.Model):
         self.from_timestamp = from_timestamp
         self.to_timestamp = to_timestamp
         self.category = category
-        road_list = []
-        for status in db.session.query(RoadStatus).\
+        road_list = db.session.query(RoadStatus).\
                         filter(RoadStatus.timestamp>self.from_timestamp).\
                         filter(RoadStatus.timestamp<=self.to_timestamp).\
-                        filter(RoadStatus.category==self.category):
-            road_list.append(status)
+                        filter(RoadStatus.category==self.category).all()
         if len(road_list):
             self.packing_index = sum([i.packing_index for i in road_list])/len(road_list)
         else:
@@ -248,9 +250,10 @@ if __name__ == "__main__":
 
     my_status = SegmentStatus(int(time()), my_segment)
     db.session.add(my_status)
+    db.session.add(my_status)
     print 'segment_status', my_status, '\n'
 
-    my_road = RoadStatus(int(time()), 'arrive')
+    my_road = RoadStatus(int(time()), 'arrive', 1)
     db.session.add(my_status)
     print 'road_status', my_road, '\n'
 
