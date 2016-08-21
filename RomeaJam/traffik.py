@@ -1,6 +1,6 @@
-# importing from the same folder
-import sys, credentials
-sys.path.append(credentials.app_path)
+#quick fix importing module RomeaJam when executing __main__
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)))
 
 from RomeaJam import db
 from sqlalchemy.orm import class_mapper
@@ -195,12 +195,11 @@ class RoadStatus(db.Model):
         for status in db.session.query(SegmentStatus).join(Segment).\
                         filter(SegmentStatus.timestamp==self.timestamp).\
                         filter(Segment.category==self.category).\
-                        order_by(SegmentStatus.packing_index.desc()).\
-                        limit(self.snake_effect):
+                        order_by(SegmentStatus.packing_index.desc()):
             self.statuses.append(status)
-        print self.statuses
         if len(self.statuses):
-            self.packing_index = sum([i.packing_index for i in self.statuses])/len(self.statuses)
+            self.packing_index = sum([i.packing_index for i in
+                        self.statuses[:self.snake_effect]])/self.snake_effect
         else:
             self.packing_index = 0
         self.accident_alerts = sum([i.accident_alerts for i in self.statuses])
@@ -208,17 +207,19 @@ class RoadStatus(db.Model):
 
 class RoadAverage(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    from_timestamp = db.Column(db.Integer)
-    to_timestamp = db.Column(db.Integer)
+    timestamp = db.Column(db.Integer)
     category = db.Column(db.String(50))
+    average_id = db.Column(db.String(10))
     packing_index = db.Column(db.Float)
     accident_alerts = db.Column(db.Integer)
     traffic_alerts = db.Column(db.Integer)
 
-    def __init__(self, from_timestamp, to_timestamp, category):
+    def __init__(self, timestamp, from_timestamp, to_timestamp, category, average_id):
+        self.timestamp = timestamp
         self.from_timestamp = from_timestamp
         self.to_timestamp = to_timestamp
         self.category = category
+        self.average_id = average_id
         road_list = db.session.query(RoadStatus).\
                         filter(RoadStatus.timestamp>self.from_timestamp).\
                         filter(RoadStatus.timestamp<=self.to_timestamp).\
@@ -235,26 +236,29 @@ if __name__ == "__main__":
     from time import time
     my_jam = Jam(12.266695, 12.189606, 0,0, 'test_street',
                             3, 'hard', 247,'w',int(time()))
-    print 'jam', my_jam, '\n'
+
     db.session.add(my_jam)
 
     my_alert = Alert(7.5, 12.22, 234, 'JAM', 'small_jam', 'w',
                     int(time()))
     db.session.add(my_alert)
-    print 'alert', my_alert, '\n'
 
     my_segment = Segment('segment_test', 12.270270, 12.211130, 7,8,
                         'test_street', 'arrive')
     db.session.add(my_segment)
-    print 'segment', my_segment, '\n'
 
     my_status = SegmentStatus(int(time()), my_segment)
-    db.session.add(my_status)
-    db.session.add(my_status)
-    print 'segment_status', my_status, '\n'
+    db.session.add(SegmentStatus(int(time()), my_segment))
+    db.session.add(SegmentStatus(int(time()), my_segment))
+    db.session.add(SegmentStatus(int(time()), my_segment))
 
     my_road = RoadStatus(int(time()), 'arrive', 1)
     db.session.add(my_status)
-    print 'road_status', my_road, '\n'
 
     db.session.commit()
+
+    print 'jam', my_jam, '\n'
+    print 'alert', my_alert, '\n'
+    print 'segment', my_segment, '\n'
+    print 'segment_status', my_status, '\n'
+    print 'road_status', my_road, '\n'

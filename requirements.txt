@@ -1,4 +1,4 @@
 Flask-SQLAlchemy
 pymysql
 requests
-schedule
+flask-apscheduler

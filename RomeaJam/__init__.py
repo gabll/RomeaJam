@@ -1,11 +1,16 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-import credentials
+from flask_apscheduler import APScheduler
+from config import Config
+#import logging
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = credentials.mysql_engine_uri
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = False
+app.config.from_object(Config())
+
 db = SQLAlchemy(app)
 
-import RomeaJam.views
+#logging.basicConfig()
+scheduler = APScheduler()
+scheduler.init_app(app)
+
+from RomeaJam import views, traffik
