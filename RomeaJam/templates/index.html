@@ -47,57 +47,53 @@
         <!-- First tab: arrive -->
         <!-- overall traffic -->
         <div id="arrive" class="tab-pane fade in active">
-            <div class="bs-callout bs-callout-{% if road_data['Arrive']['packing_index'] < 0.15 %}success{% elif road_data['Arrive']['packing_index']< 0.65 %}warning{% else %}danger{% endif %}">
+            <div class="bs-callout bs-callout-{% if road_status['Arrive']['packing_index'] < 0.15 %}success{% elif road_status['Arrive']['packing_index']< 0.65 %}warning{% else %}danger{% endif %}">
               <div class="row vertical-align"><div class="col-border col-xs-10">
-              <h4>Traffic: {{ "{0:.0f}%".format(road_data['Arrive']['packing_index'] * 100) }}</h4>
-              Alerts: {{ "%s" % road_data['Arrive']['traffic_alerts'] }} Accidents: {{ "%s" % road_data['Arrive']['accident_alerts'] }}
+              <h4>Traffic: {{ "{0:.0f}%".format(road_status['Arrive']['packing_index'] * 100) }}</h4>
+              Alerts: {{ "%s" % road_status['Arrive']['traffic_alerts'] }} Accidents: {{ "%s" % road_status['Arrive']['accident_alerts'] }}
               </div><div class="col-xs-2 text-center">
                   <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
               </div></div>
             </div>
         <!-- traffic details -->
         <ul class="list-group">
-          {% for s in coo if s.direction == 'Arrive' %}
-          <li class="list-group-item">
-              <div class="row vertical-align"><div class="col-border col-xs-10">
-                {{ s.label|safe }}
-                {% for r in road_data['Arrive']['segment_list'] if r.name == s.name %}
-                Traffic: {{ "{0:.0f}%".format(r.packing_index * 100) }}<br/>
-                Alerts: {{ "%s" % r.traffic_alerts }} Accidents: {{ "%s" % r.accident_alerts }}
-                {% endfor %}
-            </div><div class="col-xs-2 text-center">
-                <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
-            </div></div>
-          </li>
-          {% endfor %}
+            {% for s in segment_status if s.category == 'Arrive' %}
+            <li class="list-group-item">
+                <div class="row vertical-align"><div class="col-border col-xs-10">
+                  {{ s.label|safe }}
+                  Traffic: {{ "{0:.0f}%".format(s.packing_index * 100) }}<br/>
+                  Alerts: {{ "%s" % s.traffic_alerts }} Accidents: {{ "%s" % s.accident_alerts }}
+              </div><div class="col-xs-2 text-center">
+                  <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
+              </div></div>
+            </li>
+            {% endfor %}
         </ul>
         </div>
         <!-- Second tab: leave -->
             <!-- overall traffic -->
             <div id="leave" class="tab-pane fade">
-                <div class="bs-callout bs-callout-{% if road_data['Leave']['packing_index'] < 0.15 %}success{% elif road_data['Leave']['packing_index']< 0.65 %}warning{% else %}danger{% endif %}">
+                <div class="bs-callout bs-callout-{% if road_status['Leave']['packing_index'] < 0.15 %}success{% elif road_status['Leave']['packing_index']< 0.65 %}warning{% else %}danger{% endif %}">
                   <div class="row vertical-align"><div class="col-border col-xs-10">
-                  <h4>Traffic: {{ "{0:.0f}%".format(road_data['Leave']['packing_index'] * 100) }}</h4>
-                  Alerts: {{ "%s" % road_data['Leave']['traffic_alerts'] }} Accidents: {{ "%s" % road_data['Leave']['accident_alerts'] }}
+                  <h4>Traffic: {{ "{0:.0f}%".format(road_status['Leave']['packing_index'] * 100) }}</h4>
+                  Alerts: {{ "%s" % road_status['Leave']['traffic_alerts'] }} Accidents: {{ "%s" % road_status['Leave']['accident_alerts'] }}
                   </div><div class="col-xs-2 text-center">
                       <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
                   </div></div>
                 </div>
             <!-- traffic details -->
             <ul class="list-group">
-              {% for s in coo if s.direction == 'Leave' %}
-              <li class="list-group-item">
-                  <div class="row vertical-align"><div class="col-border col-xs-10">
-                    {{ s.label|safe }}
-                    {% for r in road_data['Leave']['segment_list'] if r.name == s.name %}
-                    Traffic: {{ "{0:.0f}%".format(r.packing_index * 100) }}<br/>
-                    Alerts: {{ "%s" % r.traffic_alerts }} Accidents: {{ "%s" % r.accident_alerts }}
-                    {% endfor %}
-                </div><div class="col-xs-2 text-center">
-                    <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
-                </div></div>
-              </li>
-              {% endfor %}
+                {% for s in segment_status if s.category == 'Leave' %}
+                <li class="list-group-item">
+                    <div class="row vertical-align"><div class="col-border col-xs-10">
+                      {{ s.label|safe }}
+                      Traffic: {{ "{0:.0f}%".format(s.packing_index * 100) }}<br/>
+                      Alerts: {{ "%s" % s.traffic_alerts }} Accidents: {{ "%s" % s.accident_alerts }}
+                  </div><div class="col-xs-2 text-center">
+                      <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
+                  </div></div>
+                </li>
+                {% endfor %}
             </ul>
         </div>
       </div>
