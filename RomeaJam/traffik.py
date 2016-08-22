@@ -226,10 +226,12 @@ class RoadAverage(db.Model):
                         filter(RoadStatus.category==self.category).all()
         if len(road_list):
             self.packing_index = sum([i.packing_index for i in road_list])/len(road_list)
+            self.accident_alerts = sum([i.accident_alerts for i in road_list])/len(road_list)
+            self.traffic_alerts = sum([i.traffic_alerts for i in road_list])/len(road_list)
         else:
             self.packing_index = 0
-        self.accident_alerts = sum([i.accident_alerts for i in road_list])/len(road_list)
-        self.traffic_alerts = sum([i.traffic_alerts for i in road_list])/len(road_list)
+            self.accident_alerts = 0
+            self.traffic_alerts = 0
 
 
 if __name__ == "__main__":

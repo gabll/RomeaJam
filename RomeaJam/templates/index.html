@@ -47,12 +47,12 @@
         <!-- First tab: arrive -->
         <!-- overall traffic -->
         <div id="arrive" class="tab-pane fade in active">
-            <div class="bs-callout bs-callout-{% if road_status['Arrive']['packing_index'] < 0.15 %}success{% elif road_status['Arrive']['packing_index']< 0.65 %}warning{% else %}danger{% endif %}">
+            <div class="bs-callout bs-callout-{% if road_status['Arrive']['packing_index'] < 0.25 %}success{% elif road_status['Arrive']['packing_index']< 0.37 %}warning{% else %}danger{% endif %}">
               <div class="row vertical-align"><div class="col-border col-xs-10">
               <h4>Traffic: {{ "{0:.0f}%".format(road_status['Arrive']['packing_index'] * 100) }}</h4>
               Alerts: {{ "%s" % road_status['Arrive']['traffic_alerts'] }} Accidents: {{ "%s" % road_status['Arrive']['accident_alerts'] }}
               </div><div class="col-xs-2 text-center">
-                  <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
+                  <h3 class="text-{% if road_average['Arrive'] < -15 %}success"><i class="fa fa-arrow-down fa" aria-hidden="true"></i>{% elif road_average['Arrive'] < 15 %}muted"><i class="fa fa-minus fa" aria-hidden="true"></i>{% else %}danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i>{% endif %}</h3>
               </div></div>
             </div>
         <!-- traffic details -->
@@ -73,12 +73,12 @@
         <!-- Second tab: leave -->
             <!-- overall traffic -->
             <div id="leave" class="tab-pane fade">
-                <div class="bs-callout bs-callout-{% if road_status['Leave']['packing_index'] < 0.15 %}success{% elif road_status['Leave']['packing_index']< 0.65 %}warning{% else %}danger{% endif %}">
+                <div class="bs-callout bs-callout-{% if road_status['Leave']['packing_index'] < 0.25 %}success{% elif road_status['Leave']['packing_index']< 0.37 %}warning{% else %}danger{% endif %}">
                   <div class="row vertical-align"><div class="col-border col-xs-10">
                   <h4>Traffic: {{ "{0:.0f}%".format(road_status['Leave']['packing_index'] * 100) }}</h4>
                   Alerts: {{ "%s" % road_status['Leave']['traffic_alerts'] }} Accidents: {{ "%s" % road_status['Leave']['accident_alerts'] }}
                   </div><div class="col-xs-2 text-center">
-                      <!-- <h4 class="text-danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i></h4> -->
+                      <h3 class="text-{% if road_average['Arrive'] < -15 %}success"><i class="fa fa-arrow-down fa" aria-hidden="true"></i>{% elif road_average['Arrive'] < 15 %}muted"><i class="fa fa-minus fa" aria-hidden="true"></i>{% else %}danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i>{% endif %}</h3>
                   </div></div>
                 </div>
             <!-- traffic details -->
