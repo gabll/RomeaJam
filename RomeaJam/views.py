@@ -15,10 +15,6 @@ def homepage():
     # find the last timestamp
     last_ts = db.session.query(RoadStatus).\
                          order_by(RoadStatus.id.desc()).limit(1).first().timestamp
-    # from datetime import datetime
-    # print 'last_ts', datetime.fromtimestamp(last_ts)
-    # last_ts = 1470596452   #full
-    # last_ts = 1470608164 #void
 
     # find RoadStatus
     road_status = db.session.query(RoadStatus).\
@@ -61,7 +57,3 @@ def homepage():
                                 segment_status=segment_status,
                                 road_average={'Arrive':raa, 'Leave':ral},
                                 chart_data=chart_data)
-
-#@app.errorhandler(404)
-#def not_found(error):
-#    return render_template('404.html'), 404
