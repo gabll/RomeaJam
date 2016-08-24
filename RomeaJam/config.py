@@ -13,6 +13,13 @@ class Config(object):
             'func': 'RomeaJam.jobs:parse_traffik',
             'trigger': 'interval',
             'seconds': 60
+        },
+        {
+            'id': 'get_chart_data',
+            'func': 'RomeaJam.jobs:get_chart_data',
+            'trigger': 'cron',
+            'hour': 0,
+            'minute': 1
         }
     ]
     SCHEDULER_VIEWS_ENABLED = True

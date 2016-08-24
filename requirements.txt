@@ -2,3 +2,4 @@ Flask-SQLAlchemy
 pymysql
 requests
 flask-apscheduler
+pandas

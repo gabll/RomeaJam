@@ -1,4 +1,4 @@
-from RomeaJam import app
+from RomeaJam import app, chart_data, label_graph, today
 from traffik import db, RoadStatus, Segment, SegmentStatus, RoadAverage
 import flask
 
@@ -47,11 +47,14 @@ def homepage():
         ral = int((ral['5min']-ral['30min'])/ral['30min']*100)
     else:
         ral = ral['5min']*100
+
     return flask.render_template('index.html',
                                 road_status=road_status,
                                 segment_status=segment_status,
-                                road_average={'Arrive':raa, 'Leave':ral})
-
+                                road_average={'Arrive':raa, 'Leave':ral},
+                                chart_data=chart_data,
+                                today=today,
+                                label_graph=label_graph)
 
 #@app.errorhandler(404)
 #def not_found(error):
