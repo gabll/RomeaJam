@@ -23,3 +23,7 @@ class Config(object):
         }
     ]
     SCHEDULER_VIEWS_ENABLED = True
+
+    #Track-Usage
+    TRACK_USAGE_USE_FREEGEOIP = False
+    TRACK_USAGE_INCLUDE_OR_EXCLUDE_VIEWS = 'include'

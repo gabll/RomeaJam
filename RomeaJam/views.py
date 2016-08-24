@@ -1,7 +1,13 @@
 from RomeaJam import app, chart_data
 from traffik import db, RoadStatus, Segment, SegmentStatus, RoadAverage
 import flask
+from flask_track_usage import TrackUsage
+from flask_track_usage.storage.sql import SQLStorage
 
+usage_storage = SQLStorage(db=db)
+track = TrackUsage(app, usage_storage)
+
+@track.include
 @app.route('/')
 @app.route('/index')
 def homepage():

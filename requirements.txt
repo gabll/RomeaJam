@@ -1,5 +1,6 @@
-Flask-SQLAlchemy
-pymysql
 requests
-flask-apscheduler
+pymysql
 pandas
+Flask-SQLAlchemy
+flask-apscheduler
+Flask-Track-Usage
