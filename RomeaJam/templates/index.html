@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Live status and traffic trends of SS309 - Romea">
+    <meta name="description" content="Traffico in Romea da/verso Chioggia">
     <meta name="author" content="gabll">
     <!-- <link rel="icon" href="../../favicon.ico"> -->
 
@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <link href="https://maxcdn.bootstrapcdn.com/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+    <!-- Intro.js css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/2.2.0/introjs.min.css" rel="stylesheet">
     <!-- Custom css for this page -->
     <link href="static/theme.css" rel="stylesheet">
     <!-- FontAwesome -->
@@ -27,13 +29,19 @@
 
   <body>
 
-    <nav class="navbar navbar-default navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#"><i class="fa fa-car" aria-hidden="true"></i>&nbsp&nbspRomeaJam&nbsp<sup>BETA</sup></a>
+
+
+    <div class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+        <div class="navbar-header pull-left">
+          <a class="navbar-brand" href="#"><i class="fa fa-car" aria-hidden="true"></i>&nbsp&nbspRomeaJam</a>
         </div>
-      </div>
-    </nav>
+        <div class="navbar-header pull-right">
+          <button type="button" class="btn btn-default navbar-btn" onclick="open_help()"><i class="fa fa-question-circle" aria-hidden="true"></i>&nbspHelp</button>&nbsp&nbsp
+        </div>
+    </div>
+    </div>
+
 
     <div class="container">
 
@@ -41,21 +49,31 @@
     <div class="tabs">
     <ul class="nav nav-tabs nav-justified">
       <li class="active"><a data-toggle="tab" href="#arrive"><i class="fa fa-sign-in" aria-hidden="true"></i>&nbsp&nbspArrive</a></li>
-      <li><a data-toggle="tab" href="#leave"><i class="fa fa-sign-out" aria-hidden="true"></i>&nbsp&nbspLeave</a></li>
+      <li><a data-toggle="tab" href="#leave" data-step="5" data-intro="Tap for switching traffic direction"><i class="fa fa-sign-out" aria-hidden="true"></i>&nbsp&nbspLeave</a></li>
     </ul>
       <div class="tab-content">
         <!-- First tab: arrive -->
         <!-- overall traffic -->
-        <div id="arrive" class="tab-pane fade in active">
+        <div id="arrive" class="tab-pane active">
             <div class="bs-callout bs-callout-{% if road_status['Arrive']['packing_index'] < 0.25 %}success{% elif road_status['Arrive']['packing_index']< 0.37 %}warning{% else %}danger{% endif %}">
-              <div class="row vertical-align"><div class="col-border col-xs-10">
+              <div class="row vertical-align"><div class="col-border col-xs-10" data-step="1" data-intro="Current traffic on the street.<br/>100% = complete standstill<br/><br/>Below 25% = Green<br/>25%-37% = Yellow<br/>Over 37% = Red">
               <h4>Traffic: {{ "{0:.0f}%".format(road_status['Arrive']['packing_index'] * 100) }}</h4>
               Alerts: {{ "%s" % road_status['Arrive']['traffic_alerts'] }} Accidents: {{ "%s" % road_status['Arrive']['accident_alerts'] }}
-              </div><div class="col-xs-2 text-center">
+          </div><div class="col-xs-2 text-center" data-step="2" data-intro="Traffic trend (average last 5 min vs 30 min)<br/>Steady if variation stays below 15%">
                   <h3 class="text-{% if road_average['Arrive'] < -15 %}success"><i class="fa fa-arrow-down fa" aria-hidden="true"></i>{% elif road_average['Arrive'] < 15 %}muted"><i class="fa fa-minus fa" aria-hidden="true"></i>{% else %}danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i>{% endif %}</h3>
               </div></div>
             </div>
+        <!-- traffic graph -->
+        <div class="panel panel-default">
+            <div class="panel-heading"><b>Last 3 {{ chart_data['weekday_now'] }}s</b></div>
+            <div class="panel-body" data-step="3" data-intro="Average traffic by hour in the last 3 {{ chart_data['weekday_now'] }}s">
+                <div>
+                    <canvas id="canvas-arrive"></canvas>
+                </div>
+            </div>
+        </div>
         <!-- traffic details -->
+        <div class="panel panel-default" data-step="4" data-intro="Current traffic condition by road segment"><div class="panel-heading"><b>Traffic details</b></div>
         <ul class="list-group">
             {% for s in segment_status if s.category == 'Arrive' %}
             <li class="list-group-item">
@@ -69,7 +87,7 @@
             </li>
             {% endfor %}
         </ul>
-        </div>
+        </div></div>
         <!-- Second tab: leave -->
             <!-- overall traffic -->
             <div id="leave" class="tab-pane fade">
@@ -78,10 +96,20 @@
                   <h4>Traffic: {{ "{0:.0f}%".format(road_status['Leave']['packing_index'] * 100) }}</h4>
                   Alerts: {{ "%s" % road_status['Leave']['traffic_alerts'] }} Accidents: {{ "%s" % road_status['Leave']['accident_alerts'] }}
                   </div><div class="col-xs-2 text-center">
-                      <h3 class="text-{% if road_average['Arrive'] < -15 %}success"><i class="fa fa-arrow-down fa" aria-hidden="true"></i>{% elif road_average['Arrive'] < 15 %}muted"><i class="fa fa-minus fa" aria-hidden="true"></i>{% else %}danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i>{% endif %}</h3>
+                      <h3 class="text-{% if road_average['Leave'] < -15 %}success"><i class="fa fa-arrow-down fa" aria-hidden="true"></i>{% elif road_average['Leave'] < 15 %}muted"><i class="fa fa-minus fa" aria-hidden="true"></i>{% else %}danger"><i class="fa fa-arrow-up fa" aria-hidden="true"></i>{% endif %}</h3>
                   </div></div>
                 </div>
+                <!-- traffic graph -->
+                <div class="panel panel-default">
+                    <div class="panel-heading"><b>Last 3 {{ chart_data['weekday_now'] }}s</b></div>
+                    <div class="panel-body">
+                        <div>
+                            <canvas id="canvas-leave"></canvas>
+                        </div>
+                    </div>
+                </div>
             <!-- traffic details -->
+            <div class="panel panel-default"><div class="panel-heading"><b>Traffic details</b></div>
             <ul class="list-group">
                 {% for s in segment_status if s.category == 'Leave' %}
                 <li class="list-group-item">
@@ -95,27 +123,120 @@
                 </li>
                 {% endfor %}
             </ul>
-        </div>
+        </div></div>
       </div>
+    </div>
+
+    <!--  Sharingbuttons.io -->
+    <div class="col-xs-12 text-center">
+        <!-- Sharingbutton Facebook -->
+        <a class="resp-sharing-button__link" href="https://facebook.com/sharer/sharer.php?u=http%3A%2F%2Fromeajam.io" target="_blank" aria-label="Facebook">
+          <div class="resp-sharing-button resp-sharing-button--facebook resp-sharing-button--medium"><div aria-hidden="true" class="resp-sharing-button__icon resp-sharing-button__icon--solid">
+            <svg version="1.1" x="0px" y="0px" width="24px" height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
+                <g>
+                    <path d="M18.768,7.465H14.5V5.56c0-0.896,0.594-1.105,1.012-1.105s2.988,0,2.988,0V0.513L14.171,0.5C10.244,0.5,9.5,3.438,9.5,5.32 v2.145h-3v4h3c0,5.212,0,12,0,12h5c0,0,0-6.85,0-12h3.851L18.768,7.465z"/>
+                </g>
+            </svg></div>&nbspFacebook</div>
+        </a>
+        <!-- Sharingbutton Twitter -->
+        <a class="resp-sharing-button__link" href="https://twitter.com/intent/tweet/?text=Traffico%20in%20Romea%20da%2Fverso%20Chioggia&amp;url=http%3A%2F%2Fromeajam.io" target="_blank" aria-label="Twitter">
+          <div class="resp-sharing-button resp-sharing-button--twitter resp-sharing-button--medium"><div aria-hidden="true" class="resp-sharing-button__icon resp-sharing-button__icon--solid">
+            <svg version="1.1" x="0px" y="0px" width="24px" height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
+                <g>
+                    <path d="M23.444,4.834c-0.814,0.363-1.5,0.375-2.228,0.016c0.938-0.562,0.981-0.957,1.32-2.019c-0.878,0.521-1.851,0.9-2.886,1.104 C18.823,3.053,17.642,2.5,16.335,2.5c-2.51,0-4.544,2.036-4.544,4.544c0,0.356,0.04,0.703,0.117,1.036 C8.132,7.891,4.783,6.082,2.542,3.332C2.151,4.003,1.927,4.784,1.927,5.617c0,1.577,0.803,2.967,2.021,3.782 C3.203,9.375,2.503,9.171,1.891,8.831C1.89,8.85,1.89,8.868,1.89,8.888c0,2.202,1.566,4.038,3.646,4.456 c-0.666,0.181-1.368,0.209-2.053,0.079c0.579,1.804,2.257,3.118,4.245,3.155C5.783,18.102,3.372,18.737,1,18.459 C3.012,19.748,5.399,20.5,7.966,20.5c8.358,0,12.928-6.924,12.928-12.929c0-0.198-0.003-0.393-0.012-0.588 C21.769,6.343,22.835,5.746,23.444,4.834z"/>
+                </g>
+            </svg></div>&nbspTwitter</div>
+        </a>
+        <!-- Sharingbutton WhatsApp -->
+        <a class="resp-sharing-button__link" href="whatsapp://send?text=Traffico%20in%20Romea%20da%2Fverso%20Chioggia%20http%3A%2F%2Fromeajam.io" target="_blank" aria-label="WhatsApp">
+          <div class="resp-sharing-button resp-sharing-button--whatsapp resp-sharing-button--medium"><div aria-hidden="true" class="resp-sharing-button__icon resp-sharing-button__icon--solid"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path stroke="none" d="M20.1,3.9C17.9,1.7,15,0.5,12,0.5C5.8,0.5,0.7,5.6,0.7,11.9c0,2,0.5,3.9,1.5,5.6l-1.6,5.9l6-1.6c1.6,0.9,3.5,1.3,5.4,1.3l0,0l0,0c6.3,0,11.4-5.1,11.4-11.4C23.3,8.9,22.2,6,20.1,3.9z M12,21.4L12,21.4c-1.7,0-3.3-0.5-4.8-1.3l-0.4-0.2l-3.5,1l1-3.4L4,17c-1-1.5-1.4-3.2-1.4-5.1c0-5.2,4.2-9.4,9.4-9.4c2.5,0,4.9,1,6.7,2.8c1.8,1.8,2.8,4.2,2.8,6.7C21.4,17.2,17.2,21.4,12,21.4z M17.1,14.3c-0.3-0.1-1.7-0.9-1.9-1c-0.3-0.1-0.5-0.1-0.7,0.1c-0.2,0.3-0.8,1-0.9,1.1c-0.2,0.2-0.3,0.2-0.6,0.1c-0.3-0.1-1.2-0.5-2.3-1.4c-0.9-0.8-1.4-1.7-1.6-2c-0.2-0.3,0-0.5,0.1-0.6s0.3-0.3,0.4-0.5c0.2-0.1,0.3-0.3,0.4-0.5c0.1-0.2,0-0.4,0-0.5c0-0.1-0.7-1.5-1-2.1C8.9,6.6,8.6,6.7,8.5,6.7c-0.2,0-0.4,0-0.6,0S7.5,6.8,7.2,7c-0.3,0.3-1,1-1,2.4s1,2.8,1.1,3c0.1,0.2,2,3.1,4.9,4.3c0.7,0.3,1.2,0.5,1.6,0.6c0.7,0.2,1.3,0.2,1.8,0.1c0.6-0.1,1.7-0.7,1.9-1.3c0.2-0.7,0.2-1.2,0.2-1.3C17.6,14.5,17.4,14.4,17.1,14.3z"/></svg></div>
+          &nbspWhatsApp</div>
+        </a>
     </div>
 
     </div><!-- /.container -->
 
     <footer class="footer">
       <div class="container">
-        <p class="text-footer">made with <i class="fa fa-heart" aria-hidden="true"></i> in ciosa</p>
+        <p class="text-footer"><a href:"https://github.com/gabll/RomeaJam/blob/master/LICENSE" target="_blank">GNU General Public License v3.0</a></p>
       </div>
     </footer>
 
-
+    <!-- jQuery -->
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <!-- Bootstrap core JavaScript-->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="https://maxcdn.bootstrapcdn.com/js/ie10-viewport-bug-workaround.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.1/Chart.bundle.js"></script>
+    <!-- Intro.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/2.2.0/intro.min.js"></script>
     <!-- Custom javascript for this page -->
-
-    <!-- Google Analytics code-->
-
+    <script>
+        var barChartData_arrive = {
+            labels: {{ chart_data['graph_labels'] | safe }},
+            datasets: [{
+                label: 'traffic',
+                backgroundColor: "rgba(77,77,77,0.5)",
+                data: {{ chart_data['Arrive'] | safe }}
+            }]
+        };
+        var barChartData_leave = {
+            labels: {{ chart_data['graph_labels'] | safe }},
+            datasets: [{
+                label: 'traffic',
+                backgroundColor: "rgba(77,77,77,0.5)",
+                data: {{ chart_data['Leave'] | safe }}
+            }]
+        };
+        window.onload = function() {
+            var ctx_arrive = document.getElementById("canvas-arrive").getContext("2d");
+            window.myBar = new Chart(ctx_arrive, {
+                type: 'bar',
+                data: barChartData_arrive,
+                options: {
+                    tooltips: {enabled:false},
+                    responsive: true,
+                    legend: {display:false},
+                    scales : {
+                                yAxes:[{display:false}],
+                                xAxes : [ {
+                                    gridLines : {display : false, offsetGridLines: false},
+                                    ticks: {fontSize: 12}
+                                } ]
+                             }
+                }
+            });
+            var ctx_leave = document.getElementById("canvas-leave").getContext("2d");
+            window.myBar = new Chart(ctx_leave, {
+                type: 'bar',
+                data: barChartData_leave,
+                options: {
+                    tooltips: {enabled:false},
+                    responsive: true,
+                    legend: {display:false},
+                    scales : {
+                                yAxes:[{display:false}],
+                                xAxes : [ {
+                                    gridLines : {display : false, offsetGridLines: false},
+                                    ticks: {fontSize: 12}
+                                } ]
+                             }
+                }
+            });
+        };
+        //open introJs
+        function activateTab(tab){
+            $('.nav-tabs a[href="#' + tab + '"]').tab('show');
+        };
+        function open_help(){
+            activateTab('arrive');
+            //fix problem in tab fade in
+            setTimeout(function intro(){
+                javascript:introJs().start();
+            }, 500);
+        };
+    </script>
   </body>
 </html>

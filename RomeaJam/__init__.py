@@ -10,11 +10,13 @@ app.config.from_object(Config())
 
 db = SQLAlchemy(app)
 
-chart_data = {'Arrive':[], 'Leave':[]}
-today = datetime.now().strftime("%A")
-label_graph = {i:'%s-%s' % (i,i+2) for i in range(0,24,2)}
+chart_data = {'Arrive':[],
+              'Leave':[],
+              'weekday_now':None,
+              'graph_labels': range(0,26,2)}
+from jobs import get_chart_data
+get_chart_data()
 
-# #logging.basicConfig()
 # logger = logging.getLogger()
 # logger.addHandler(logging.StreamHandler())
 

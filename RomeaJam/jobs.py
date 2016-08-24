@@ -86,6 +86,8 @@ def get_chart_data():
 
     chart_data['Arrive'] = avg_a
     chart_data['Leave'] = avg_l
+    chart_data['weekday_now'] = datetime.now().strftime("%A")
+    print datetime.now(), 'chart updated!', chart_data
 
 if __name__ == "__main__":
     parse_traffik()

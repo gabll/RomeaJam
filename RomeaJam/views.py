@@ -1,4 +1,4 @@
-from RomeaJam import app, chart_data, label_graph, today
+from RomeaJam import app, chart_data
 from traffik import db, RoadStatus, Segment, SegmentStatus, RoadAverage
 import flask
 
@@ -9,7 +9,9 @@ def homepage():
     # find the last timestamp
     last_ts = db.session.query(RoadStatus).\
                          order_by(RoadStatus.id.desc()).limit(1).first().timestamp
-    last_ts = 1470596452   #full
+    # from datetime import datetime
+    # print 'last_ts', datetime.fromtimestamp(last_ts)
+    # last_ts = 1470596452   #full
     # last_ts = 1470608164 #void
 
     # find RoadStatus
@@ -52,9 +54,7 @@ def homepage():
                                 road_status=road_status,
                                 segment_status=segment_status,
                                 road_average={'Arrive':raa, 'Leave':ral},
-                                chart_data=chart_data,
-                                today=today,
-                                label_graph=label_graph)
+                                chart_data=chart_data)
 
 #@app.errorhandler(404)
 #def not_found(error):
