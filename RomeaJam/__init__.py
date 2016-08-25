@@ -37,6 +37,7 @@ if not app.debug:
 #APScheduler
 scheduler = APScheduler()
 scheduler.init_app(app)
+scheduler.start()
 
 #views
 from RomeaJam import views
