@@ -130,12 +130,12 @@ class SegmentStatus(db.Model):
         Compute traffic as a projection of the longitude"""
         #check if same street and direction
         if jam.street == self.segment.street and jam.direction == self.segment.direction:
+            sj, ej = float(jam.startLongitude), float(jam.endLongitude)
+            ss, es = self.segment.startLongitude, self.segment.endLongitude
             if (self.segment.direction == 'West' and
-            (float(jam.startLongitude) < self.segment.startLongitude and float(jam.startLongitude) > self.segment.endLongitude) or
-            (float(jam.endLongitude) < self.segment.startLongitude and float(jam.endLongitude) > self.segment.endLongitude)
+            (sj > ss and ej < ss) or (sj < ss and sj > es)
             ) or (self.segment.direction == 'East' and
-            (float(jam.startLongitude) > self.segment.startLongitude and float(jam.startLongitude) < self.segment.endLongitude) or
-            (float(jam.endLongitude) > self.segment.startLongitude and float(jam.endLongitude) < self.segment.endLongitude)):
+            (sj < ss and ej > ss) or (sj > ss and es > sj)):
                 #traffic length
                 start = float(jam.startLongitude)
                 end = float(jam.endLongitude)
