@@ -22,6 +22,9 @@ class Config(object):
             'minute': 1
         }
     ]
+    SCHEDULER_JOB_DEFAULTS = {
+        'coalesce': True
+    }
     SCHEDULER_VIEWS_ENABLED = True
 
     #Track-Usage
