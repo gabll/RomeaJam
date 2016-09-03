@@ -1,6 +1,6 @@
 from traffik import db, Jam, Alert, Segment, SegmentStatus, RoadStatus, RoadAverage
 from RomeaJam import chart_data
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import credentials
 import requests
@@ -58,7 +58,7 @@ def get_chart_data():
     pd.options.mode.chained_assignment = None
 
     qs = db.session.query(RoadStatus).\
-                 filter(RoadStatus.timestamp > datetime(now.year,now.month,now.day-22,0,0).strftime('%s')).\
+                 filter(RoadStatus.timestamp > (datetime(now.year,now.month,now.day,0,0)-timedelta(days=22)).strftime('%s')).\
                  filter(RoadStatus.timestamp <= now.strftime('%s'))
     df = pd.read_sql(qs.statement, qs.session.bind)
     df.set_index('id', inplace=True)
