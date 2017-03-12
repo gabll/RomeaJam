@@ -28,8 +28,8 @@ class Jam(db.Model):
     color = db.Column(db.String(50))
     delayInSec = db.Column(db.Integer)
     source = db.Column(db.String(5))
-    timestamp = db.Column(db.Integer)
-    direction = db.Column(db.String(5))
+    timestamp = db.Column(db.Integer, index=True)
+    direction = db.Column(db.String(5), index=True)
 
     def __init__(self, startLongitude, endLongitude, startLatitude, endLatitude,
                  street, severity, color, delayInSec, source, timestamp):
@@ -56,7 +56,7 @@ class Alert(db.Model):
     category = db.Column(db.String(50))
     subcategory = db.Column(db.String(50))
     source = db.Column(db.String(5))
-    timestamp = db.Column(db.Integer)
+    timestamp = db.Column(db.Integer, index=True)
 
     def __init__(self, latitude, longitude, likes, category, subcategory,
                  source, timestamp):
@@ -100,7 +100,7 @@ class SegmentStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
     road_status_id = db.Column(db.Integer, db.ForeignKey('road_status.id'))
-    timestamp = db.Column(db.Integer)
+    timestamp = db.Column(db.Integer, index=True)
     jams_list = db.Column(db.String(200))
     delayInSec = db.Column(db.Integer)
     accident_alerts = db.Column(db.Integer)
@@ -180,8 +180,8 @@ class SegmentStatus(db.Model):
 
 class RoadStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    timestamp = db.Column(db.Integer)
-    category = db.Column(db.String(50))
+    timestamp = db.Column(db.Integer, index=True)
+    category = db.Column(db.String(50), index=True)
     snake_effect = db.Column(db.SmallInteger)
     packing_index = db.Column(db.Float)
     accident_alerts = db.Column(db.Integer)
@@ -207,8 +207,8 @@ class RoadStatus(db.Model):
 
 class RoadAverage(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    timestamp = db.Column(db.Integer)
-    category = db.Column(db.String(50))
+    timestamp = db.Column(db.Integer, index=True)
+    category = db.Column(db.String(50), index=True)
     average_id = db.Column(db.String(10))
     packing_index = db.Column(db.Float)
     accident_alerts = db.Column(db.Integer)
